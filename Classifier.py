@@ -4,25 +4,31 @@ from sklearn.cross_validation import StratifiedKFold as KFold
 from sklearn.metrics import classification_report
 import numpy as np
 
-def Classify(features, labels, namesClasses):
+def Classify(features, labels, namesClasses,features_test):
 
-    print "Training"
+    '''
+
+    '''
+
     # n_estimators is the number of decision trees
-    # max_features also known as m_try is set to the default value of the square root of the number of features
-    clf = RF(n_estimators=100, n_jobs=3);
-    scores = cross_validation.cross_val_score(clf, features, labels, cv=5, n_jobs=1);
-    print "Accuracy of all classes"
-    print np.mean(scores)
+    # max_features also known as m_try is set to the default value of the square root of 
+    # the number of features
+    clf = RF(n_estimators=100, n_jobs=3)
+    clf.fit(features, labels)
+    predictedProbs = clf.predict_proba(features_test)
+    
+    # build a list of class names ordered the same way as the probabilities in the rows of 
+    # predictedProbs
 
+    #first build a dictionary mapping labels to class names
+    label2ClassName = {}
+    for label,className in zip(labels,namesClasses):
+        if not label in label2ClassName:
+            label2ClassName[label] = className
+    # then use the clf.classes_ attribute which contains the label values as they are ordered
+    # in each row of the returned probability matrix to build the classNameSet
+    classNameSet = []
+    for label in clf.classes_:
+        classNameSet.append(label2ClassName[label])
 
-    kf = KFold(labels, n_folds=5)
-    y_pred = np.zeros((len(labels),len(set(labels))))
-    for train, test in kf:
-        features_train, features_test, labels_train, labels_test = features[train,:], features[test,:], labels[train], labels[test]
-        clf = RF(n_estimators=100, n_jobs=3)
-        clf.fit(features_train, labels_train)
-        y_pred[test] = clf.predict_proba(features_test)
-
-    print classification_report(labels, y_pred, target_names=namesClasses)
-
-    return y_pred
+    return predictedProbs,classNameSet
