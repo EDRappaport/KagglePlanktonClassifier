@@ -32,8 +32,8 @@ def loadTrainingData():
     for folder in directory_names:
         currentClass = folder.split(os.sep)[-1]
         label2ClassName.append(currentClass)
-        for fileNameDir in os.walk(folder):
-            for fileName in fileNameDir[2]:
+        for fileNameDir in os.walk(folder):     
+            for fileName in fileNameDir[2]:               
                 # Only read in the images
                 if fileName[-4:] != ".jpg":
                     continue
