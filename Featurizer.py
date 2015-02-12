@@ -8,7 +8,7 @@ maxPixel = 25
 imageSize = maxPixel * maxPixel
 num_features = imageSize + 1 # for our ratio
 
-X = np.zeros((1, num_features), dtype=float)
+X = np.zeros(num_features, dtype=float)
 
 # find the largest nonzero region
 def getLargestRegion(props, labelmap, imagethres):

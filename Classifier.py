@@ -4,7 +4,7 @@ from sklearn.cross_validation import StratifiedKFold as KFold
 from sklearn.metrics import classification_report
 import numpy as np
 
-def Classify(features, labels, namesClasses,features_test):
+def Classify(features, labels, label2ClassName,features_test):
 
     '''
 
@@ -19,16 +19,8 @@ def Classify(features, labels, namesClasses,features_test):
     
     # build a list of class names ordered the same way as the probabilities in the rows of 
     # predictedProbs
-
-    #first build a dictionary mapping labels to class names
-    label2ClassName = {}
-    for label,className in zip(labels,namesClasses):
-        if not label in label2ClassName:
-            label2ClassName[label] = className
-    # then use the clf.classes_ attribute which contains the label values as they are ordered
-    # in each row of the returned probability matrix to build the classNameSet
     classNameSet = []
     for label in clf.classes_:
         classNameSet.append(label2ClassName[label])
 
-    return predictedProbs,classNameSet
+    return predictedProbs,classNameSet,clf

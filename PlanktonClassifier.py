@@ -21,18 +21,17 @@ def loadTrainingData():
                   continue
                 numberOfImages += 1
 
-    # List of string of class names
-    namesClasses = list()
-    #files = [] delete this
-
+    
+    #load the data
     print("Reading Files")
     i = 0
     curLabel = 0
     features = list()
     labels = list()
+    label2ClassName = []
     for folder in directory_names:
         currentClass = folder.split(os.sep)[-1]
-        namesClasses.append(currentClass)
+        label2ClassName.append(currentClass)
         for fileNameDir in os.walk(folder):
             for fileName in fileNameDir[2]:
                 # Only read in the images
@@ -52,7 +51,7 @@ def loadTrainingData():
                 report = [int((j+1)*numberOfImages/20.) for j in range(20)]
                 if i in report: print np.ceil(i *100.0 / numberOfImages), "% done"
         curLabel += 1
-    return features,labels,namesClasses
+    return features,labels,label2ClassName
 
 def loadTestData():
     #count total number of test examples
@@ -90,7 +89,7 @@ def loadTestData():
             if i in report: print np.ceil(i *100.0 / numberOfImages), "% done"
     return features_test,testFileNames
 
-def makeSubmission(classNameSet,testFileNames,predictedProbs):
+def makeSubmission(testFileNames,classNameSet,predictedProbs):
     '''
        classNameSet: a list of class names corresponding to columns of the predictedProbs matrix
        testFileNames: a list of test file names, with entries corresponding to the rows in the
@@ -101,21 +100,22 @@ def makeSubmission(classNameSet,testFileNames,predictedProbs):
     '''
 
     with open('submission.csv','w') as f:
-        header = ','.join(classNames)+'\n'
+        header = 'image'+','.join(classNameSet)+'\n'
         f.write(header)
         for testFile,testProbs in zip(testFileNames,predictedProbs):
-            line = testFile+','+','.join(testProbs)+'\n'
+            probs = [str(p) for p in testProbs]
+            line = testFile+','+','.join(probs)+'\n'
             f.write(line)
 
 def _main_():
     
-    features,labels,namesClasses = loadTrainingData()
+    features,labels,label2ClassName = loadTrainingData()
 
     features_test,testFileNames = loadTestData()
 
-    predictedProbs,classNameSet = Classify(features, labels, namesClasses,features_test)
+    predictedProbs,classNameSet,clf = Classify(features, labels, label2ClassName,features_test)
 
-    makeSubmission(classNameSet,testFileNames,predictedProbs)
+    makeSubmission(testFileNames,classNameSet,predictedProbs)
 
 if __name__ == "__main__":
     _main_()
