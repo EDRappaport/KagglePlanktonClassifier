@@ -3,19 +3,13 @@ from skimage import measure
 from skimage import morphology
 import numpy as np
 
-# We'll rescale the images to be 25x25
-maxPixel = 25
-imageSize = maxPixel * maxPixel
-num_features = imageSize + 1 # for our ratio
-
-X = np.zeros(num_features, dtype=float)
 
 # find the largest nonzero region
-def getLargestRegion(props, labelmap, imagethres):
+def getLargestRegion(region_props, labeled_im, thresholded_im):
     regionmaxprop = None
-    for regionprop in props:
+    for regionprop in region_props:
         # check to see if the region is at least 50% nonzero
-        if sum(imagethres[labelmap == regionprop.label])*1.0/regionprop.area < 0.50:
+        if sum(thresholded_im[labeled_im == regionprop.label])*1.0/regionprop.area < 0.50:
             continue
         if regionmaxprop is None:
             regionmaxprop = regionprop
@@ -26,18 +20,18 @@ def getLargestRegion(props, labelmap, imagethres):
 def getMinorMajorRatio(image):
     image = image.copy()
     # Create the thresholded image to eliminate some of the background
-    imageThresh = np.where(image > np.mean(image),0.,1.0)
+    thresholded_im = np.where(image < np.mean(image),1.0,0.)  # ROI is dark relative to background ??? 
 
     #Dilate the image
-    imDilated = morphology.dilation(imageThresh, np.ones((4,4)))
+    dilated_im = morphology.dilation(thresholded_im, np.ones((4,4)))
 
-    # Create the label list
-    label_list = measure.label(imDilated)
-    label_list = imageThresh*label_list
-    label_list = label_list.astype(int)
+    # Create the labeled_image
+    labeled_im = measure.label(dilated_im)
+    labeled_im = thresholded_im*labeled_im #zeros out labels based on threshhold mask
+    labeled_im = labeled_im.astype(int)
 
-    region_list = measure.regionprops(label_list)
-    maxregion = getLargestRegion(region_list, label_list, imageThresh)
+    region_props = measure.regionprops(labeled_im)
+    maxregion = getLargestRegion(region_props, labeled_im, thresholded_im)
 
     # guard against cases where the segmentation fails by providing zeros
     ratio = 0.0
@@ -48,10 +42,17 @@ def getMinorMajorRatio(image):
 
 def FeaturizeImage(image):
     axisRatio = getMinorMajorRatio(image)
+
+    # We'll rescale the images to be 25x25
+    maxPixel = 25
+    imageSize = maxPixel * maxPixel
+    num_features = imageSize + 1 # for our ratio
     image = resize(image, (maxPixel, maxPixel))
 
+    X = np.zeros(num_features, dtype=float)
+
     # Store the rescaled image pixels and the axis ratio
-    X[0, 0:imageSize] = np.reshape(image, (1, imageSize))
-    X[0, imageSize] = axisRatio
+    X[0:imageSize] = np.reshape(image, (1,imageSize))
+    X[imageSize] = axisRatio
 
     return X

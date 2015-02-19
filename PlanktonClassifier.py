@@ -7,7 +7,7 @@ from Featurizer import FeaturizeImage
 from Classifier import Classify
 from MetricsEvaluation import multiclass_log_loss
 
-def loadTrainingData():
+def loadTrainingDataAndFeaturize():
     # get the class names from the directory structure
     directory_names = list(set(glob.glob(os.path.join("competition_data", "train", "*"))).difference(
         set(glob.glob(os.path.join("competition_data", "train", "*.*")))))
@@ -40,7 +40,6 @@ def loadTrainingData():
                 # Read in the images and create the features
                 nameFileImage = "{0}{1}{2}".format(fileNameDir[0], os.sep, fileName)
                 image = imread(nameFileImage, as_grey=True)
-                #files.append(nameFileImage) DELETE THIS
 
                 featureVector = FeaturizeImage(image)
                 features.append(featureVector)
@@ -53,7 +52,7 @@ def loadTrainingData():
         curLabel += 1
     return features,labels,label2ClassName
 
-def loadTestData():
+def loadTestDataAndFeaurize():
     #count total number of test examples
     numberOfImages = 0
     testFolder = os.path.join("competition_data", "test")
@@ -91,16 +90,18 @@ def loadTestData():
 
 def makeSubmission(testFileNames,classNameSet,predictedProbs):
     '''
-       classNameSet: a list of class names corresponding to columns of the predictedProbs matrix
        testFileNames: a list of test file names, with entries corresponding to the rows in the
                       predictedProbs matrix
+
+       classNameSet: a list of class names corresponding to columns of the predictedProbs matrix
+       
        predictedProbs: a matrix of N test examples by P classes, giving the class probabilities
                        for each test example
 
     '''
 
     with open('submission.csv','w') as f:
-        header = 'image'+','.join(classNameSet)+'\n'
+        header = 'image,'+','.join(classNameSet)+'\n'
         f.write(header)
         for testFile,testProbs in zip(testFileNames,predictedProbs):
             probs = [str(p) for p in testProbs]
@@ -109,11 +110,11 @@ def makeSubmission(testFileNames,classNameSet,predictedProbs):
 
 def _main_():
     
-    features,labels,label2ClassName = loadTrainingData()
+    features_train,labels,label2ClassName = loadTrainingDataAndFeaturize()
 
-    features_test,testFileNames = loadTestData()
+    features_test,testFileNames = loadTestDataAndFeaurize()
 
-    predictedProbs,classNameSet,clf = Classify(features, labels, label2ClassName,features_test)
+    predictedProbs,classNameSet,clf = Classify(features_train, labels, label2ClassName,features_test)
 
     makeSubmission(testFileNames,classNameSet,predictedProbs)
 
