@@ -1,11 +1,13 @@
 import glob
 import os
+import random
 from skimage.io import imread
 import numpy as np
 
 from Featurizer import FeaturizeImage
 from Classifier import Classify
-from MetricsEvaluation import multiclass_log_loss
+from Validater import KFoldCrossValidate
+
 
 def loadTrainingData():
     # get the class names from the directory structure
@@ -110,6 +112,7 @@ def makeSubmission(testFileNames,classNameSet,predictedProbs):
 def _main_():
     
     features,labels,label2ClassName = loadTrainingData()
+    #KFoldCrossValidate(features, labels, label2ClassName)
 
     features_test,testFileNames = loadTestData()
 

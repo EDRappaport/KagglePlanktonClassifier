@@ -4,6 +4,8 @@ from sklearn.cross_validation import StratifiedKFold as KFold
 from sklearn.metrics import classification_report
 import numpy as np
 
+from MetricsEvaluation import multiclass_log_loss
+
 def KFoldCrossValidate(features, labels, namesClasses):
 
     '''Do KFolds cross validation and print a classification report
@@ -11,10 +13,21 @@ def KFoldCrossValidate(features, labels, namesClasses):
               argument
     '''
 
-    kf = KFold(labels, n_folds=5)
+    kf = KFold(labels, n_folds=2)
     y_pred = np.zeros((len(labels),len(set(labels))))
     for train, test in kf:
-        features_train, features_test, labels_train, labels_test = features[train,:], features[test,:], labels[train], labels[test]
+        features_train = list()
+        labels_train = list()
+        features_test = list()
+        labels_test = list()
+        for ind in train:
+            features_train.append(features[ind])
+            labels_train.append(labels[ind])
+        for ind in test:
+            features_test.append(features[ind])
+            labels_test.append(labels[ind])
+        #features_train, features_test, labels_train, labels_test = features[train], features[test], labels[train],
+        # labels[test]
         # n_estimators is the number of decision trees
         # max_features also known as m_try is set to the default value of the square root of 
         # the number of features
@@ -22,10 +35,10 @@ def KFoldCrossValidate(features, labels, namesClasses):
         clf.fit(features_train, labels_train)
         y_pred[test] = clf.predict_proba(features_test)
 
-    print classification_report(labels, y_pred, target_names=namesClasses)
+    #print classification_report(labels, y_pred, target_names=namesClasses)
 
     logLoss = multiclass_log_loss(labels, y_pred)
 
-    print("Final log loss: " + logLoss)
+    print("Final log loss: " + str(logLoss))
 
     return 

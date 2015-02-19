@@ -23,7 +23,6 @@ def getLargestRegion(props, labelmap, imagethres):
     return regionmaxprop
 
 def getMinorMajorRatio(image):
-    image = image.copy()
     # Create the thresholded image to eliminate some of the background
     imageThresh = np.where(image > np.mean(image),0.,1.0)
 
@@ -31,7 +30,7 @@ def getMinorMajorRatio(image):
     imDilated = morphology.dilation(imageThresh, np.ones((4,4)))
 
     # Create the label list
-    label_list = measure.label(imDilated)
+    label_list = measure.label(imDilated, background=None)
     label_list = imageThresh*label_list
     label_list = label_list.astype(int)
 
@@ -53,7 +52,7 @@ def getRegionPropFeatures(image):
     imDilated = morphology.dilation(imageThresh, np.ones((4,4)))
 
     # Create the label list
-    label_list = measure.label(imDilated)
+    label_list = measure.label(imDilated, background=None)
     label_list = imageThresh*label_list
     label_list = label_list.astype(int)
 
@@ -63,11 +62,17 @@ def getRegionPropFeatures(image):
     # guard against cases where the segmentation fails by providing zeros
     ratio = 0.0
     if ((not maxregion is None) and  (maxregion.major_axis_length != 0.0)):
-        ratio = 0.0 if maxregion is None else  maxregion.minor_axis_length*1.0 / maxregion.major_axis_length
-    return ratio
+        ratio = maxregion.minor_axis_length*1.0 / maxregion.major_axis_length
 
-    if not maxregion is None:
-        ratio = 0.0 if maxregion is None else  maxregion.minor_axis_length*1.0 / maxregion.major_axis_length
+    meanIntensity = 0
+    orientation = 0
+    area = 0
+    if (not maxregion is None):
+        meanIntensity = maxregion.mean_intensity
+        orientation = maxregion.orientation
+        area = maxregion.area
+
+    return [ratio, meanIntensity, orientation, area]
 
 
 def FeaturizeImage(image):
@@ -77,6 +82,6 @@ def FeaturizeImage(image):
     # Store the rescaled image pixels and the axis ratio
     X = np.zeros(num_features, dtype=float)
     X[0:imageSize] = np.reshape(image, (1, imageSize))
-    X[imageSize] = axisRatio
+    X[imageSize:] = axisRatio
 
     return X
