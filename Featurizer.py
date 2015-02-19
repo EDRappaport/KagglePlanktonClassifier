@@ -6,7 +6,7 @@ import numpy as np
 # We'll rescale the images to be 25x25
 maxPixel = 25
 imageSize = maxPixel * maxPixel
-num_features = imageSize + 1 # for our ratio
+num_features = imageSize + 3 # for our ratio, orientation, and area
 
 
 # find the largest nonzero region
@@ -64,24 +64,22 @@ def getRegionPropFeatures(image):
     if ((not maxregion is None) and  (maxregion.major_axis_length != 0.0)):
         ratio = maxregion.minor_axis_length*1.0 / maxregion.major_axis_length
 
-    meanIntensity = 0
     orientation = 0
     area = 0
     if (not maxregion is None):
-        meanIntensity = maxregion.mean_intensity
         orientation = maxregion.orientation
         area = maxregion.area
 
-    return [ratio, meanIntensity, orientation, area]
+    return [ratio, orientation, area]
 
 
 def FeaturizeImage(image):
-    axisRatio = getMinorMajorRatio(image)
+    features = getRegionPropFeatures(image)
     image = resize(image, (maxPixel, maxPixel))
 
     # Store the rescaled image pixels and the axis ratio
     X = np.zeros(num_features, dtype=float)
     X[0:imageSize] = np.reshape(image, (1, imageSize))
-    X[imageSize:] = axisRatio
+    X[imageSize:] = features
 
     return X
