@@ -1,3 +1,4 @@
+#Sarah's Edit
 from sklearn.ensemble import RandomForestClassifier as RF
 from sklearn import cross_validation
 from sklearn.cross_validation import StratifiedKFold as KFold
