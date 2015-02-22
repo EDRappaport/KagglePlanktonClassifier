@@ -5,8 +5,9 @@ from sklearn.metrics import classification_report
 import numpy as np
 
 from MetricsEvaluation import multiclass_log_loss
+from PlanktonClassifier import loadTrainingData
 
-def KFoldCrossValidate(features, labels, namesClasses):
+def KFoldCrossValidate(features, labels, namesClasses,n_est=100):
 
     '''Do KFolds cross validation and print a classification report
        TO-DO: strip out the random forest classifier and have this take a classifier as an 
@@ -31,7 +32,7 @@ def KFoldCrossValidate(features, labels, namesClasses):
         # n_estimators is the number of decision trees
         # max_features also known as m_try is set to the default value of the square root of 
         # the number of features
-        clf = RF(n_estimators=100, n_jobs=3)
+        clf = RF(n_estimators=n_est, n_jobs=3)
         clf.fit(features_train, labels_train)
         y_pred[test] = clf.predict_proba(features_test)
 
@@ -42,3 +43,11 @@ def KFoldCrossValidate(features, labels, namesClasses):
     print("Final log loss: " + str(logLoss))
 
     return 
+
+def _main_():    
+    features,labels,label2ClassName = loadTrainingData()
+    KFoldCrossValidate(features, labels, label2ClassName)
+
+
+if __name__ == "__main__":
+    _main_()

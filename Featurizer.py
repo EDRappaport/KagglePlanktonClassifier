@@ -6,7 +6,8 @@ import numpy as np
 # We'll rescale the images to be 25x25
 maxPixel = 25
 imageSize = maxPixel * maxPixel
-num_features = imageSize + 3 # for our ratio, orientation, and area
+num_regionProp_features = 17
+num_features = imageSize + num_regionProp_features 
 
 
 # find the largest nonzero region
@@ -56,21 +57,26 @@ def getRegionPropFeatures(image):
     label_list = imageThresh*label_list
     label_list = label_list.astype(int)
 
-    region_list = measure.regionprops(label_list)
+    region_list = measure.regionprops(label_list,image)
     maxregion = getLargestRegion(region_list, label_list, imageThresh)
 
-    # guard against cases where the segmentation fails by providing zeros
-    ratio = 0.0
-    if ((not maxregion is None) and  (maxregion.major_axis_length != 0.0)):
-        ratio = maxregion.minor_axis_length*1.0 / maxregion.major_axis_length
+    # guard against cases where the segmentation fails by providing zeros    
+    features = []
+    if not maxregion is None:
+        features.append(maxregion.area/image.size) #normalize area to the size of the image
+        features.append(maxregion.eccentricity) #is this the same as minor-major axis ratio?
+        features.append(maxregion.equivalent_diameter/maxregion.convex_image.size) #normalize by area of bounding box
+        features.append(maxregion.euler_number) #number of objects (= 1) subtracted by number of holes (8-connectivity).
+        features.append(maxregion.extent) #Ratio of pixels in the region to pixels in the total bounding box
+        features.extend(maxregion.inertia_tensor_eigvals) #The two eigen values of the inertia tensor in decreasing order
+        features.append(maxregion.mean_intensity/image.std()) #mean intensity in the region normalized by std of the image
+        features.extend(maxregion.moments_hu) #Hu moments (translation, scale and rotation invariant)
+        features.append(maxregion.perimeter/maxregion.equivalent_diameter)
+        features.append(maxregion.solidity) #Ratio of pixels in the region to pixels of the convex hull image
+    else:
+        features = [0.0]*num_regionProp_features
 
-    orientation = 0
-    area = 0
-    if (not maxregion is None):
-        orientation = maxregion.orientation
-        area = maxregion.area
-
-    return [ratio, orientation, area]
+    return features
 
 
 def FeaturizeImage(image):
@@ -82,4 +88,5 @@ def FeaturizeImage(image):
     X[0:imageSize] = np.reshape(image, (1, imageSize))
     X[imageSize:] = features
 
+    #X = np.array(features)
     return X

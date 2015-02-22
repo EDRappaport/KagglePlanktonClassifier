@@ -6,11 +6,12 @@ import numpy as np
 
 from Featurizer import FeaturizeImage
 from Classifier import Classify
-from Validater import KFoldCrossValidate
+#from Validater import KFoldCrossValidate
 
 
-def loadTrainingData():
+def loadTrainingData(maxImsperClass=None):
     # get the class names from the directory structure
+    # if maxImsperClass is supplied  we will load at most that many images from each class
     directory_names = list(set(glob.glob(os.path.join("competition_data", "train", "*"))).difference(
         set(glob.glob(os.path.join("competition_data", "train", "*.*")))))
     directory_names.sort()
@@ -34,7 +35,8 @@ def loadTrainingData():
     for folder in directory_names:
         currentClass = folder.split(os.sep)[-1]
         label2ClassName.append(currentClass)
-        for fileNameDir in os.walk(folder):     
+        for fileNameDir in os.walk(folder): 
+            imsperClass = 0    
             for fileName in fileNameDir[2]:               
                 # Only read in the images
                 if fileName[-4:] != ".jpg":
@@ -52,6 +54,8 @@ def loadTrainingData():
                  # report progress for each 5% done
                 report = [int((j+1)*numberOfImages/20.) for j in range(20)]
                 if i in report: print np.ceil(i *100.0 / numberOfImages), "% done"
+                imsperClass+=1
+                if not maxImsperClass is None and imsperClass==maxImsperClass: break
         curLabel += 1
     return features,labels,label2ClassName
 
@@ -102,7 +106,7 @@ def makeSubmission(testFileNames,classNameSet,predictedProbs):
     '''
 
     with open('submission.csv','w') as f:
-        header = 'image'+','.join(classNameSet)+'\n'
+        header = 'image,'+','.join(classNameSet)+'\n'
         f.write(header)
         for testFile,testProbs in zip(testFileNames,predictedProbs):
             probs = [str(p) for p in testProbs]
