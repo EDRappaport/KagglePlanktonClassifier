@@ -16,6 +16,11 @@ def multiclass_log_loss(y_true, y_pred, eps=1e-15):
     -------
     loss : float
     """
+
+    #force inputs to be np arrays
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+
     predictions = np.clip(y_pred, eps, 1 - eps)
 
     # normalize row sums to 1
