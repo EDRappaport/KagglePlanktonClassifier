@@ -100,7 +100,7 @@ def makeSubmission(testFileNames,classNameSet,predictedProbs):
     '''
 
     with open('submission.csv','w') as f:
-        header = 'image'+','.join(classNameSet)+'\n'
+        header = 'image'+','+','.join(classNameSet)+'\n'
         f.write(header)
         for testFile,testProbs in zip(testFileNames,predictedProbs):
             probs = [str(p) for p in testProbs]
