@@ -13,7 +13,7 @@ def Classify(features, labels, label2ClassName,features_test):
     # n_estimators is the number of decision trees
     # max_features also known as m_try is set to the default value of the square root of 
     # the number of features
-    clf = RF(n_estimators=100, n_jobs=3)
+    clf = RF(n_estimators=1200, n_jobs=-1)
     clf.fit(features, labels)
     predictedProbs = clf.predict_proba(features_test)
     

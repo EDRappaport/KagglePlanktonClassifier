@@ -1,3 +1,4 @@
+from skimage.feature import hog
 from skimage.transform import resize
 from skimage import measure
 from skimage import morphology
@@ -27,7 +28,7 @@ def getLargestRegion(image):
             regionmaxprop = regionprop
         if regionmaxprop.filled_area < regionprop.filled_area:
             regionmaxprop = regionprop
-    return regionmaxprop
+    return regionmaxprop, labeled_im
 
 #############################################################################
 # find a set of features for the given image
@@ -37,32 +38,68 @@ def FeaturizeImage(image):
     imageSize = maxpixel*maxpixel
 
     #Find the largest region and use it to compute various features
-    maxregion = getLargestRegion(image)
+    maxregion,labeled_im = getLargestRegion(image)
    
     # guard against cases where the segmentation fails by providing zeros    
     features = []
-    #normalize area to the size of the image
-    features.append(maxregion.area/image.size) if not maxregion is None else features.append(0.0)
-    #is this the same as minor-major axis ratio? 
+    
+    # #normalize area to the size of the image
+    # features.append(maxregion.area/image.size) if not maxregion is None else features.append(0.0)
+    # #is this the same as minor-major axis ratio? 
+    # features.append(maxregion.eccentricity) if not maxregion is None else features.append(0.0)
+    # #normalize by area of bounding box
+    # features.append(maxregion.equivalent_diameter/maxregion.convex_image.size) if not maxregion is None else features.append(0.0)
+    # #number of objects (= 1) subtracted by number of holes (8-connectivity).
+    # features.append(maxregion.euler_number) if not maxregion is None else features.append(0.0)
+    # #Ratio of pixels in the region to pixels in the total bounding box
+    # features.append(maxregion.extent) if not maxregion is None else features.append(0.0)
+    # #The two eigen values of the inertia tensor in decreasing order
+    # features.extend(maxregion.inertia_tensor_eigvals) if not maxregion is None else features.extend([0.0]*2)
+    # #mean intensity in the region normalized by std of the image
+    # features.append(maxregion.mean_intensity/image.std()) if not maxregion is None else features.append(0.0)
+    # #Hu moments (translation, scale and rotation invariant)
+    # features.extend(maxregion.moments_hu) if not maxregion is None else features.extend([0.0]*7)
+    # features.append(maxregion.perimeter/maxregion.equivalent_diameter) if not maxregion is None else features.append(0.0)
+    # #Ratio of pixels in the region to pixels of the convex hull image
+    # features.append(maxregion.solidity) if not maxregion is None else features.append(0.0)
+    
+    ROI = image[labeled_im==maxregion.label] if not maxregion is None else None
+
+    #Area/Size features
+    features.append(maxregion.area) if not maxregion is None else features.append(0.0)
+    features.append(maxregion.convex_area) if not maxregion is None else features.append(0.0)
+    features.append(maxregion.filled_area) if not maxregion is None else features.append(0.0)
+    
+    #Shape features
+    features.append(maxregion.perimeter) if not maxregion is None else features.append(0.0)
+    
     features.append(maxregion.eccentricity) if not maxregion is None else features.append(0.0)
-    #normalize by area of bounding box
+    features.append(maxregion.equivalent_diameter) if not maxregion is None else features.append(0.0)
+    features.append(maxregion.major_axis_length) if not maxregion is None else features.append(0.0)
+    features.append(maxregion.minor_axis_length) if not maxregion is None else features.append(0.0)
     features.append(maxregion.equivalent_diameter/maxregion.convex_image.size) if not maxregion is None else features.append(0.0)
-    #number of objects (= 1) subtracted by number of holes (8-connectivity).
-    features.append(maxregion.euler_number) if not maxregion is None else features.append(0.0)
-    #Ratio of pixels in the region to pixels in the total bounding box
+    features.append(maxregion.perimeter/maxregion.equivalent_diameter) if not maxregion is None else features.append(0.0)
+
+    features.append(maxregion.solidity) if not maxregion is None else features.append(0.0)
     features.append(maxregion.extent) if not maxregion is None else features.append(0.0)
-    #The two eigen values of the inertia tensor in decreasing order
+    features.append(maxregion.area/image.size) if not maxregion is None else features.append(0.0)
+    
+    features.append(maxregion.euler_number) if not maxregion is None else features.append(0.0)
+   
     features.extend(maxregion.inertia_tensor_eigvals) if not maxregion is None else features.extend([0.0]*2)
-    #mean intensity in the region normalized by std of the image
-    features.append(maxregion.mean_intensity/image.std()) if not maxregion is None else features.append(0.0)
+    
+    #intensity related features
+    features.append(maxregion.mean_intensity) if not maxregion is None else features.append(0.0)
+    features.append(maxregion.max_intensity) if not maxregion is None else features.append(0.0)
+    features.append(maxregion.min_intensity) if not maxregion is None else features.append(0.0)
+    features.append(ROI.std()) if not ROI is None else features.append(0.0)
+
     #Hu moments (translation, scale and rotation invariant)
     features.extend(maxregion.moments_hu) if not maxregion is None else features.extend([0.0]*7)
-    features.append(maxregion.perimeter/maxregion.equivalent_diameter) if not maxregion is None else features.append(0.0)
-    #Ratio of pixels in the region to pixels of the convex hull image
-    features.append(maxregion.solidity) if not maxregion is None else features.append(0.0)
+
     #Rescaled image
-    features.extend(np.reshape( resize(image, (maxPixel, maxPixel) ), (1, imageSize) ) )
-    
+    features.extend(np.reshape( resize(image, (maxpixel, maxpixel) ), (1, imageSize) )[0,:])
+
     return np.array(features)
 
 #############################################################################

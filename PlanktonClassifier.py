@@ -58,7 +58,7 @@ def loadTrainingDataAndFeaturize(maxImsperClass=None):
         curLabel += 1
     return features,labels,label2ClassName
 
-def loadTestDataAndFeaurize():
+def loadTestDataAndFeaturize():
     #count total number of test examples
     numberOfImages = 0
     testFolder = os.path.join("competition_data", "test")
@@ -119,7 +119,7 @@ def _main_():
 
     #KFoldCrossValidate(features_train, labels, label2ClassName)
 
-    features_test,testFileNames = loadTestDataAndFeaurize()
+    features_test,testFileNames = loadTestDataAndFeaturize()
 
     predictedProbs,classNameSet,clf = Classify(features_train, labels, label2ClassName,features_test)
 
